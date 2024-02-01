@@ -28,16 +28,32 @@ static const uint8_t des_ls_order[16] = {
 	1, 2, 2, 2, 2, 2, 2, 1,
 };
 
-void printbits(uint64_t n){
-    uint64_t i; 
-    i = 1ULL << (sizeof(n) * 8 - 1);
-    while (i > 0){
-         if(n&i)
-              printf("1"); 
-         else 
-              printf("0"); 
-         i >>= 1;
-    }
+void printbin32(uint32_t n)
+{
+	char buf[33];
+	for (int i = 0; i < 32; i++) {
+		if ((n >> (31 - i)) & 1)
+			buf[i] = '1';
+		else
+			buf[i] = '0';
+	}
+
+	buf[32] = '\0';
+	printf("%s\n", buf);
+}
+
+void printbin64(uint64_t n)
+{
+	char buf[65];
+	for (int i = 0; i < 64; i++) {
+		if ((n >> (63 - i)) & 1)
+			buf[i] = '1';
+		else
+			buf[i] = '0';
+	}
+
+	buf[64] = '\0';
+	printf("%s\n", buf);
 }
 
 uint64_t des_enc(uint64_t msg, uint64_t key)
@@ -47,7 +63,7 @@ uint64_t des_enc(uint64_t msg, uint64_t key)
 	for (int i = 0; i < 56; i++) {
 		int bit = (key >> (64 - des_pc_1[i])) & 1;
 		if (bit)
-			k_plus |= (1UL << (55 - i));
+			k_plus |= (1ULL << (55 - i));
 	}
 
 	uint32_t c0 = (k_plus >> 28) & 0x0fffffff;
@@ -76,15 +92,13 @@ uint64_t des_enc(uint64_t msg, uint64_t key)
 	for (int i = 0; i < 16; i++) {
 		uint64_t cN = c0_16[i + 1] & 0xfffffff;
 		uint64_t dN = d0_16[i + 1] & 0xfffffff;
-		uint64_t cNdN = cN << 28 | dN;
+		uint64_t cNdN = (cN << 28) | dN;
 		for (int j = 0; j < 48; j++) {
 			int bit = (cNdN >> (56 - des_pc_2[j])) & 1;
 			if (bit)
-				k1_16[i] |= (1UL << (47 - j));
+				k1_16[i] |= (1ULL << (47 - j));
 		}
-		printf("k%i:\n", i + 1);
-		printbits(k1_16[i]);
-		printf("\n\n");
+		printbin64(k1_16[i]);
 	}
 	return k_plus;
 }
