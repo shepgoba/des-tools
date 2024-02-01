@@ -16,7 +16,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 
-run: build\$(EXECUTABLE_NAME)
+run:
 	.\build\$(EXECUTABLE_NAME)
 
 do: .\build\$(EXECUTABLE_NAME) run

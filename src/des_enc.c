@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-static const uint8_t des_pc_1[56] = {
+static const uint8_t des_pc_table_1[56] = {
 	57, 49, 41, 33, 25, 17, 9,
 	1, 58, 50, 42, 34, 26, 18,
 	10, 2, 59, 51, 43, 35, 27,
@@ -12,7 +12,7 @@ static const uint8_t des_pc_1[56] = {
 	21, 13, 5, 28, 20, 12, 4
 };
 
-static const uint8_t des_pc_2[48] = {
+static const uint8_t des_pc_table_2[48] = {
 	14, 17, 11, 24, 1, 5,
 	3, 28, 15, 6, 21, 10,
 	23, 19, 12, 4, 26, 8,
@@ -21,6 +21,28 @@ static const uint8_t des_pc_2[48] = {
 	30, 40, 51, 45, 33, 48,
 	44, 49, 39, 56, 34, 53,
 	46, 42, 50, 36, 29, 32
+};
+
+static const uint8_t des_ip_table[64] = {
+	58, 50, 42, 34, 26, 18, 10, 2,
+	60, 52, 44, 36, 28, 20, 12, 4,
+	62, 54, 46, 38, 30, 22, 14, 6,
+	64, 56, 48, 40, 32, 24, 16, 8,
+	57, 49, 41, 33, 25, 17, 9, 1,
+	59, 51, 43, 35, 27, 19, 11, 3,
+	61, 53, 45, 37, 29, 21, 13, 5,
+	63, 55, 47, 39, 31, 23, 15, 7
+};
+
+static const uint8_t des_e_table[48] = {
+	32, 1, 2, 3, 4, 5,
+	4, 5, 6, 7, 8, 9,
+	8, 9, 10, 11, 12, 13,
+	12, 13, 14, 15, 16, 17,
+	16, 17, 18, 19, 20, 21,
+	20, 21, 22, 23, 24, 25,
+	24, 25, 26, 27, 28, 29,
+	28, 29, 30, 31, 32, 1
 };
 
 static const uint8_t des_ls_order[16] = {
@@ -56,12 +78,17 @@ void printbin64(uint64_t n)
 	printf("%s\n", buf);
 }
 
+uint32_t f(uint32_t data, uint64_t key)
+{
+	// TODO
+}
+
 uint64_t des_enc(uint64_t msg, uint64_t key)
 {
 	uint64_t k_plus = 0;
 
 	for (int i = 0; i < 56; i++) {
-		int bit = (key >> (64 - des_pc_1[i])) & 1;
+		int bit = (key >> (64 - des_pc_table_1[i])) & 1;
 		if (bit)
 			k_plus |= (1ULL << (55 - i));
 	}
@@ -94,12 +121,25 @@ uint64_t des_enc(uint64_t msg, uint64_t key)
 		uint64_t dN = d0_16[i + 1] & 0xfffffff;
 		uint64_t cNdN = (cN << 28) | dN;
 		for (int j = 0; j < 48; j++) {
-			int bit = (cNdN >> (56 - des_pc_2[j])) & 1;
+			int bit = (cNdN >> (56 - des_pc_table_2[j])) & 1;
 			if (bit)
 				k1_16[i] |= (1ULL << (47 - j));
 		}
-		printbin64(k1_16[i]);
 	}
+
+	uint64_t msg_ip = 0;
+
+	for (int i = 0; i < 64; i++) {
+		int bit = (msg >> (64 - des_ip_table[i])) & 1;
+		if (bit)
+			msg_ip |= (1ULL << (63 - i));
+	}
+	
+	uint32_t l0 = (msg_ip >> 32) & 0xffffffff;
+	uint32_t r0 = msg_ip & 0xffffffff; 
+
+	printbin64(msg_ip);
+
 	return k_plus;
 }
 
