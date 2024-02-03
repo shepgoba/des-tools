@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
+// known good
 static const uint8_t des_pc_table_1[56] = {
 	57, 49, 41, 33, 25, 17, 9,
 	1, 58, 50, 42, 34, 26, 18,
@@ -12,6 +13,7 @@ static const uint8_t des_pc_table_1[56] = {
 	21, 13, 5, 28, 20, 12, 4
 };
 
+// known good
 static const uint8_t des_pc_table_2[48] = {
 	14, 17, 11, 24, 1, 5,
 	3, 28, 15, 6, 21, 10,
@@ -23,6 +25,7 @@ static const uint8_t des_pc_table_2[48] = {
 	46, 42, 50, 36, 29, 32
 };
 
+// known good
 static const uint8_t des_ip_table[64] = {
 	58, 50, 42, 34, 26, 18, 10, 2,
 	60, 52, 44, 36, 28, 20, 12, 4,
@@ -34,6 +37,7 @@ static const uint8_t des_ip_table[64] = {
 	63, 55, 47, 39, 31, 23, 15, 7
 };
 
+// known good
 static const uint8_t des_e_table[48] = {
 	32, 1, 2, 3, 4, 5,
 	4, 5, 6, 7, 8, 9,
@@ -61,7 +65,7 @@ static const uint8_t des_s2_table[4][16] = {
 
 static const uint8_t des_s3_table[4][16] = {
 	{10, 0, 9, 14, 6, 3, 15, 5, 1, 13, 12, 7, 11, 4, 2, 8},
-	{13, 7, 0, 9, 3, 4, 6, 10, 2, 8, 5, 14, 12, 11, 15, 1}
+	{13, 7, 0, 9, 3, 4, 6, 10, 2, 8, 5, 14, 12, 11, 15, 1},
 	{13, 6, 4, 9, 8, 15, 3, 0, 11, 1, 2, 12, 5, 10, 14, 7},
 	{1, 10, 13, 0, 6, 9, 8, 7, 4, 15, 14, 3, 11, 5, 2, 12}
 };
@@ -101,10 +105,36 @@ static const uint8_t des_s8_table[4][16] = {
 	{2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11}
 };
 
+static const uint8_t des_p_table[32] = {
+	16, 7, 20, 21, 29, 12, 28, 17,
+	1, 15, 23, 26, 5, 18, 31, 10,
+	2, 8, 24, 14, 32, 27, 3, 9,
+	19, 13, 30, 6, 22, 11, 4, 25
+};
+
+static const uint8_t (*des_meta_s_table[8])[16] = {
+	des_s1_table, des_s2_table, des_s3_table, des_s4_table,
+	des_s5_table, des_s6_table, des_s7_table, des_s8_table
+};
+
 static const uint8_t des_ls_order[16] = {
 	1, 1, 2, 2, 2, 2, 2, 2, 
 	1, 2, 2, 2, 2, 2, 2, 1,
 };
+
+void printbin8(uint32_t n)
+{
+	char buf[9];
+	for (int i = 0; i < 8; i++) {
+		if ((n >> (7 - i)) & 1)
+			buf[i] = '1';
+		else
+			buf[i] = '0';
+	}
+
+	buf[8] = '\0';
+	printf("%s\n", buf);
+}
 
 void printbin32(uint32_t n)
 {
@@ -135,7 +165,7 @@ void printbin64(uint64_t n)
 }
 
 
-uint64_t e(uint32_t val)
+static uint64_t e(uint32_t val)
 {
 	uint64_t tmp = 0;
 	for (int i = 0; i < 48; i++) {
@@ -146,12 +176,35 @@ uint64_t e(uint32_t val)
 	return tmp;
 }
 
-
-uint32_t f(uint32_t data, uint64_t key)
+static int32_t p(uint32_t val)
 {
-	uint32_t tmp = key ^ e(data);
+	uint64_t tmp = 0;
+	for (int i = 0; i < 32; i++) {
+		int bit = (val >> (32 - des_p_table[i])) & 1;
+		if (bit)
+			tmp |= (1ULL << (31 - i));
+	}
 	return tmp;
 }
+
+static uint32_t f(uint32_t data, uint64_t key)
+{
+	// 48 bits
+	uint64_t tmp = key ^ e(data);
+
+	uint32_t result = 0;
+	for (int i = 0; i < 8; i++) {
+		uint8_t bits = (tmp >> (i * 6)) & 0x3f;
+		uint8_t row_idx = ((bits & 0x20) >> 4) | (bits & 1);
+		uint8_t col_idx = (bits & 0x1e) >> 1;
+		uint8_t s_result = des_meta_s_table[7 - i][row_idx][col_idx];
+		result |= (s_result << (i * 4));
+	}
+
+	return p(result);
+}
+
+
 
 uint64_t des_enc(uint64_t msg, uint64_t key)
 {
@@ -184,7 +237,7 @@ uint64_t des_enc(uint64_t msg, uint64_t key)
 		}
 	}
 
-	uint64_t k1_16[16];
+	uint64_t k1_16[16] = {0};
 
 	for (int i = 0; i < 16; i++) {
 		uint64_t cN = c0_16[i + 1] & 0xfffffff;
@@ -208,9 +261,8 @@ uint64_t des_enc(uint64_t msg, uint64_t key)
 	uint32_t l0 = (msg_ip >> 32) & 0xffffffff;
 	uint32_t r0 = msg_ip & 0xffffffff; 
 
-	printbin32(r0);
 	uint32_t data = f(r0, k1_16[0]);
-
+	printbin32(data);
 	return data;
 }
 
