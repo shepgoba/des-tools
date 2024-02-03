@@ -45,6 +45,34 @@ static const uint8_t des_e_table[48] = {
 	28, 29, 30, 31, 32, 1
 };
 
+static const uint8_t des_s1_table[4][16] = {
+	{14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7},
+	{0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8},
+	{4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0},
+	{15, 12, 8, 2, 4, 9, 1, 7, 5, 11, 3, 14, 10, 0, 6, 13}
+};
+
+static const uint8_t des_s2_table[4][16] = {
+	{15, 1, 8, 14, 6, 11, 3, 4, 9, 7, 2, 13, 12, 0, 5, 10},
+	{3, 13, 4, 7, 15, 2, 8, 14, 12, 0, 1, 10, 6, 9, 11, 5},
+	{0, 14, 7, 11, 10, 4, 13, 1, 5, 8, 12, 6, 9, 3, 2, 15},
+	{13, 8, 10, 1, 3, 15, 4, 2, 11, 6, 7, 12, 0, 5, 14, 9}
+};
+
+static const uint8_t des_s3_table[4][16] = {
+	{10, 0, 9, 14, 6, 3, 15, 5, 1, 13, 12, 7, 11, 4, 2, 8},
+	{13, 7, 0, 9, 3, 4, 6, 10, 2, 8, 5, 14, 12, 11, 15, 1}
+	{13, 6, 4, 9, 8, 15, 3, 0, 11, 1, 2, 12, 5, 10, 14, 7},
+	{1, 10, 13, 0, 6, 9, 8, 7, 4, 15, 14, 3, 11, 5, 2, 12}
+};
+
+static const uint8_t des_s4_table[4][16] = {
+	{7, 13, 14, 3, 0, 6, 9, 10, 1, 2, 8, 5, 11, 12, 4, 15},
+	{13, 8, 11, 5, 6, 15, 0, 3, 4, 7, 2, 12, 1, 10, 14, 9},
+	{10, 6, 9, 0, 12, 11, 7, 13, 15, 1, 3, 14, 5, 2, 8, 4},
+	{3, 15, 0, 6, 10, 1, 13, 8, 9, 4, 5, 11, 12, 7, 2, 14}
+};
+
 static const uint8_t des_ls_order[16] = {
 	1, 1, 2, 2, 2, 2, 2, 2, 
 	1, 2, 2, 2, 2, 2, 2, 1,
@@ -78,9 +106,23 @@ void printbin64(uint64_t n)
 	printf("%s\n", buf);
 }
 
+
+uint64_t e(uint32_t val)
+{
+	uint64_t tmp = 0;
+	for (int i = 0; i < 48; i++) {
+		int bit = (val >> (32 - des_e_table[i])) & 1;
+		if (bit)
+			tmp |= (1ULL << (47 - i));
+	}
+	return tmp;
+}
+
+
 uint32_t f(uint32_t data, uint64_t key)
 {
-	// TODO
+	uint32_t tmp = key ^ e(data);
+	return tmp;
 }
 
 uint64_t des_enc(uint64_t msg, uint64_t key)
@@ -138,9 +180,10 @@ uint64_t des_enc(uint64_t msg, uint64_t key)
 	uint32_t l0 = (msg_ip >> 32) & 0xffffffff;
 	uint32_t r0 = msg_ip & 0xffffffff; 
 
-	printbin64(msg_ip);
+	printbin32(r0);
+	uint32_t data = f(r0, k1_16[0]);
 
-	return k_plus;
+	return data;
 }
 
 int main(void)
