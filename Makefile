@@ -7,7 +7,7 @@ OBJ_DIR := obj
 SRC_FILES := $(wildcard $(SRC_DIR)/*.c)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
 
-CXXFLAGS := -Werror -Wall -Wno-unused -O3
+CXXFLAGS := -Werror -Wextra -Wall -Wno-unused -O3
 
 build\$(EXECUTABLE_NAME): $(OBJ_FILES)
 	$(CC) $(LDFLAGS) -o $@ $^

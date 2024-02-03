@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 
 // known good
@@ -105,16 +106,16 @@ static const uint8_t des_s8_table[4][16] = {
 	{2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11}
 };
 
+static const uint8_t (*des_meta_s_table[8])[16] = {
+	des_s1_table, des_s2_table, des_s3_table, des_s4_table,
+	des_s5_table, des_s6_table, des_s7_table, des_s8_table
+};
+
 static const uint8_t des_p_table[32] = {
 	16, 7, 20, 21, 29, 12, 28, 17,
 	1, 15, 23, 26, 5, 18, 31, 10,
 	2, 8, 24, 14, 32, 27, 3, 9,
 	19, 13, 30, 6, 22, 11, 4, 25
-};
-
-static const uint8_t (*des_meta_s_table[8])[16] = {
-	des_s1_table, des_s2_table, des_s3_table, des_s4_table,
-	des_s5_table, des_s6_table, des_s7_table, des_s8_table
 };
 
 static const uint8_t des_ip_invert_table[64] = {
@@ -132,49 +133,6 @@ static const uint8_t des_ls_order[16] = {
 	1, 1, 2, 2, 2, 2, 2, 2, 
 	1, 2, 2, 2, 2, 2, 2, 1,
 };
-
-void printbin8(uint32_t n)
-{
-	char buf[9];
-	for (int i = 0; i < 8; i++) {
-		if ((n >> (7 - i)) & 1)
-			buf[i] = '1';
-		else
-			buf[i] = '0';
-	}
-
-	buf[8] = '\0';
-	printf("%s\n", buf);
-}
-
-void printbin32(uint32_t n)
-{
-	char buf[33];
-	for (int i = 0; i < 32; i++) {
-		if ((n >> (31 - i)) & 1)
-			buf[i] = '1';
-		else
-			buf[i] = '0';
-	}
-
-	buf[32] = '\0';
-	printf("%s\n", buf);
-}
-
-void printbin64(uint64_t n)
-{
-	char buf[65];
-	for (int i = 0; i < 64; i++) {
-		if ((n >> (63 - i)) & 1)
-			buf[i] = '1';
-		else
-			buf[i] = '0';
-	}
-
-	buf[64] = '\0';
-	printf("%s\n", buf);
-}
-
 
 static uint64_t e(uint32_t val)
 {
@@ -214,8 +172,6 @@ static uint32_t f(uint32_t data, uint64_t key)
 
 	return p(result);
 }
-
-
 
 uint64_t des_enc(uint64_t msg, uint64_t key)
 {
@@ -294,13 +250,39 @@ uint64_t des_enc(uint64_t msg, uint64_t key)
 	return final_value;
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
-	uint64_t msg = 0x0123456789ABCDEF;
-	uint64_t key = 0x133457799BBCDFF1;
+	if (argc != 3) {
+		printf("Usage: des-encode <msg> <key>\nNOTE: input your 64-bit message and key in hex, leading 0x is fine\n");
+		return 1;
+	}
+
+	char *msg_ptr = argv[1];
+	char *key_ptr = argv[2];
+
+	if (msg_ptr[0] == '0' && msg_ptr[1] == 'x') {
+		// skip over 0x
+		msg_ptr += 2;
+	}
+
+	if (key_ptr[0] == '0' && key_ptr[1] == 'x') {
+		// skip over 0x
+		key_ptr += 2;
+	}
+
+	uint64_t msg = strtoull(msg_ptr, NULL, 16);
+	if (msg == 0) {
+		printf("msg is not valid!\n");
+		return 2;
+	}
+
+	uint64_t key = strtoull(key_ptr, NULL, 16);
+	if (msg == 0) {
+		printf("key is not valid!\n");
+		return 3;
+	}
 
 	uint64_t result = des_enc(msg, key);
-
-	printf("Ciphertext: 0x%llx\n", result);
+	printf("Resulting ciphertext: 0x%llx\n", result);
 	return 0;
 }
