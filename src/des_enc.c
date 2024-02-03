@@ -279,6 +279,6 @@ int main(int argc, char *argv[])
 	}
 
 	uint64_t result = des_enc(msg, key);
-	printf("Resulting ciphertext: 0x%llx\n", result);
+	printf("Resulting ciphertext: %llx\n", result);
 	return 0;
 }
