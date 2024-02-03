@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-// known good
 static const uint8_t des_pc_table_1[56] = {
 	57, 49, 41, 33, 25, 17, 9,
 	1, 58, 50, 42, 34, 26, 18,
@@ -14,7 +13,6 @@ static const uint8_t des_pc_table_1[56] = {
 	21, 13, 5, 28, 20, 12, 4
 };
 
-// known good
 static const uint8_t des_pc_table_2[48] = {
 	14, 17, 11, 24, 1, 5,
 	3, 28, 15, 6, 21, 10,
@@ -26,7 +24,6 @@ static const uint8_t des_pc_table_2[48] = {
 	46, 42, 50, 36, 29, 32
 };
 
-// known good
 static const uint8_t des_ip_table[64] = {
 	58, 50, 42, 34, 26, 18, 10, 2,
 	60, 52, 44, 36, 28, 20, 12, 4,
@@ -38,7 +35,6 @@ static const uint8_t des_ip_table[64] = {
 	63, 55, 47, 39, 31, 23, 15, 7
 };
 
-// known good
 static const uint8_t des_e_table[48] = {
 	32, 1, 2, 3, 4, 5,
 	4, 5, 6, 7, 8, 9,
@@ -253,7 +249,7 @@ uint64_t des_enc(uint64_t msg, uint64_t key)
 int main(int argc, char *argv[])
 {
 	if (argc != 3) {
-		printf("Usage: des-encode <msg> <key>\nNOTE: input your 64-bit message and key in hex, leading 0x is fine\n");
+		printf("Usage: des-encode <msg> <key>\nNOTE: input your 64-bit message and key in hexadecimal, leading 0x is fine\n");
 		return 1;
 	}
 
