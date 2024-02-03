@@ -1,4 +1,4 @@
-CC = gcc
+CC = clang
 
 EXECUTABLE_NAME := des_encode.exe
 

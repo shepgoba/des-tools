@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 static const uint8_t des_pc_table_1[56] = {
 	57, 49, 41, 33, 25, 17, 9,
@@ -279,6 +280,6 @@ int main(int argc, char *argv[])
 	}
 
 	uint64_t result = des_enc(msg, key);
-	printf("Resulting ciphertext: %llx\n", result);
+	printf("Resulting ciphertext: %" PRIx64 "\n", result);
 	return 0;
 }
