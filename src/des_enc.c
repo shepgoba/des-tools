@@ -117,6 +117,17 @@ static const uint8_t (*des_meta_s_table[8])[16] = {
 	des_s5_table, des_s6_table, des_s7_table, des_s8_table
 };
 
+static const uint8_t des_ip_invert_table[64] = {
+	40, 8, 48, 16, 56, 24, 64, 32,
+	39, 7, 47, 15, 55, 23, 63, 31,
+	38, 6, 46, 14, 54, 22, 62, 30,
+	37, 5, 45, 13, 53, 21, 61, 29,
+	36, 4, 44, 12, 52, 20, 60, 28,
+	35, 3, 43, 11, 51, 19, 59, 27,
+	34, 2, 42, 10, 50, 18, 58, 26,
+	33, 1, 41, 9, 49, 17, 57, 25
+};
+
 static const uint8_t des_ls_order[16] = {
 	1, 1, 2, 2, 2, 2, 2, 2, 
 	1, 2, 2, 2, 2, 2, 2, 1,
@@ -259,11 +270,28 @@ uint64_t des_enc(uint64_t msg, uint64_t key)
 	}
 	
 	uint32_t l0 = (msg_ip >> 32) & 0xffffffff;
-	uint32_t r0 = msg_ip & 0xffffffff; 
+	uint32_t r0 = msg_ip & 0xffffffff;
 
-	uint32_t data = f(r0, k1_16[0]);
-	printbin32(data);
-	return data;
+	uint32_t l0_16[17];
+	uint32_t r0_16[17];
+	l0_16[0] = l0;
+	r0_16[0] = r0;
+
+	for (int i = 1; i < 17; i++) {
+		l0_16[i] = r0_16[i - 1];
+		r0_16[i] = l0_16[i - 1] ^ f(r0_16[i - 1], k1_16[i - 1]);
+	}
+
+	uint64_t r16_l16 = ((uint64_t)r0_16[16] << 32) | l0_16[16];
+	
+	uint64_t final_value = 0;
+	for (int i = 0; i < 64; i++) {
+		int bit = (r16_l16 >> (64 - des_ip_invert_table[i])) & 1;
+		if (bit)
+			final_value |= (1ULL << (63 - i));
+	}
+
+	return final_value;
 }
 
 int main(void)
