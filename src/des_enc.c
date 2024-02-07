@@ -236,7 +236,7 @@ uint64_t des_enc(uint64_t msg, uint64_t key)
 	}
 
 	uint64_t r16_l16 = ((uint64_t)r0_16[16] << 32) | l0_16[16];
-	
+	printf("%llx\n", r16_l16);
 	uint64_t final_value = 0;
 	for (int i = 0; i < 64; i++) {
 		int bit = (r16_l16 >> (64 - des_ip_invert_table[i])) & 1;
@@ -245,6 +245,19 @@ uint64_t des_enc(uint64_t msg, uint64_t key)
 	}
 
 	return final_value;
+}
+
+uint64_t des_dec(uint64_t ciphertext, uint64_t key)
+{
+	uint64_t ip_output = 0;
+	for (int i = 0; i < 64; i++) {
+		int bit = (ciphertext >> (64 - des_ip_table[i])) & 1;
+		if (bit)
+			ip_output |= (1ULL << (63 - i));
+	}
+
+	printf("%llx\n", ip_output);
+	return 0;
 }
 
 int main(int argc, char *argv[])
@@ -280,6 +293,7 @@ int main(int argc, char *argv[])
 	}
 
 	uint64_t result = des_enc(msg, key);
+	des_dec(result, key);
 	printf("Resulting ciphertext: %" PRIx64 "\n", result);
 	return 0;
 }
