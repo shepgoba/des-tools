@@ -172,7 +172,7 @@ static uint32_t f(uint32_t data, uint64_t key)
 	return p(result);
 }
 
-uint64_t des(uint64_t msg, uint64_t key, bool decrypt)
+uint64_t __des(uint64_t msg, uint64_t key, bool decrypt)
 {
 	uint64_t k_plus = 0;
 
@@ -260,6 +260,16 @@ uint64_t des(uint64_t msg, uint64_t key, bool decrypt)
 	return final_value;
 }
 
+uint64_t des_block_encode(uint64_t msg, uint64_t key)
+{
+	return __des(msg, key, false);
+}
+
+uint64_t des_block_decode(uint64_t ciphertext, uint64_t key)
+{
+	return __des(ciphertext, key, true);
+}
+
 int main(int argc, char *argv[])
 {
 	if (argc != 3) {
@@ -291,7 +301,7 @@ int main(int argc, char *argv[])
 		printf("key is not valid!\n");
 		return 3;
 	}
-	uint64_t dec_result = des(msg, key, true);
+	uint64_t dec_result = des_block_encode(msg, key);
 
 	printf("Resulting decryption: %" PRIx64 "\n", dec_result);
 	return 0;
